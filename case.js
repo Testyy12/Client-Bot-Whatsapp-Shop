@@ -49,6 +49,7 @@ const list = JSON.parse(fs.readFileSync("./library/database/list.json"))
 const { furbrat } = require('./library/furbrat')
 const { Claude } = require('./library/claude-ai3')
 const { topUpDana } = require('./library/topupdana')
+const { imgToSticker } = require('./library/imgTosticker')
 const { pinterest, pinterest2, remini, mediafire, tiktokDl } = require('./library/scraper');
 const { unixTimestampSeconds, generateMessageTag, processTime, webApi, getRandom, getBuffer, fetchJson, runtime, clockString, sleep, isUrl, getTime, formatDate, tanggal, formatp, jsonformat, reSize, toHD, logic, generateProfilePicture, bytesToSize, checkBandwidth, getSizeMedia, parseMention, getGroupAdmins, readFileTxt, readFileJson, getHashedPassword, generateAuthToken, cekMenfes, generateToken, batasiTeks, randomText, isEmoji, getTypeUrlMedia, pickRandom, toIDR, capital } = require('./library/function');
 
@@ -375,6 +376,84 @@ if (!pluginsDisable) return
 //============= [ COMMANDS ] ====================================================
 
 switch (command) {
+
+
+
+    case 'brat': {
+        if (!text) return reply(`Penggunaan : ${prefix + command} <teks>`);
+    
+        try {
+            const { createCanvas, registerFont } = require('canvas');
+            
+            registerFont('./lib/arialnarrow.ttf', { family: 'ArialNarrow' });
+    
+            const canvas = createCanvas(512, 512);
+            const ctx = canvas.getContext('2d');
+    
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+            const findOptimalFontSize = (text, maxWidth, maxHeight) => {
+                let fontSize = 100;
+                ctx.font = `bold ${fontSize}px ArialNarrow`;
+                const words = text.split(' ');
+                let lines = [];
+    
+                while (fontSize > 0) {
+                    lines = [];
+                    let currentLine = [];
+                    let currentWidth = 0;
+                    ctx.font = `bold ${fontSize}px ArialNarrow`;
+    
+                    for (const word of words) {
+                        const wordWidth = ctx.measureText(word + ' ').width;
+                        if (currentWidth + wordWidth <= maxWidth) {
+                            currentLine.push(word);
+                            currentWidth += wordWidth;
+                        } else {
+                            if (currentLine.length > 0) {
+                                lines.push(currentLine);
+                            }
+                            currentLine = [word];
+                            currentWidth = wordWidth;
+                        }
+                    }
+                    if (currentLine.length > 0) {
+                        lines.push(currentLine);
+                    }
+    
+                    const totalHeight = lines.length * (fontSize + 10);
+                    if (totalHeight <= maxHeight) {
+                        break;
+                    }
+                    fontSize -= 2;
+                }
+                return { fontSize, lines };
+            };
+    
+            const padding = 40;
+            const maxWidth = canvas.width - (padding * 2);
+            const maxHeight = canvas.height - (padding * 2);
+            const { fontSize, lines } = findOptimalFontSize(q, maxWidth, maxHeight);
+    
+            ctx.fillStyle = '#000000';
+            ctx.font = `bold ${fontSize}px ArialNarrow`;
+            
+            const lineHeight = fontSize + 10;
+            const totalHeight = lines.length * line.Height;
+    
+            lines.forEach((line, index) => {
+                ctx.fillText(line.join(' '), padding, padding + (index * lineHeight));
+            });
+    
+            const buffer = canvas.toBuffer();
+            await imgToSticker(m.chat, buffer, m, { packname: "Liyaa MD", author: "Hann Universe!!" });
+        } catch (error) {
+            console.error('Error creating sticker:', error);
+            m.reply('Gagal membuat stiker.');
+        }
+    }
+    break
 
     case "topup": {
         const args = text.split(" ");
