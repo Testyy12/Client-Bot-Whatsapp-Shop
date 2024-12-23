@@ -49,6 +49,8 @@ const list = JSON.parse(fs.readFileSync("./library/database/list.json"))
 const { furbrat } = require('./library/furbrat')
 const { Claude } = require('./library/claude-ai3')
 const { topUpDana } = require('./library/topupdana')
+const { SholatNotification } = require('./library/sholatNotif');
+const sholatNotif = new SholatNotification();
 const { imgToSticker } = require('./library/imgTosticker')
 const { pinterest, pinterest2, remini, mediafire, tiktokDl } = require('./library/scraper');
 const { unixTimestampSeconds, generateMessageTag, processTime, webApi, getRandom, getBuffer, fetchJson, runtime, clockString, sleep, isUrl, getTime, formatDate, tanggal, formatp, jsonformat, reSize, toHD, logic, generateProfilePicture, bytesToSize, checkBandwidth, getSizeMedia, parseMention, getGroupAdmins, readFileTxt, readFileJson, getHashedPassword, generateAuthToken, cekMenfes, generateToken, batasiTeks, randomText, isEmoji, getTypeUrlMedia, pickRandom, toIDR, capital } = require('./library/function');
@@ -188,6 +190,45 @@ await m.reply(check.respon)
 }
 
 //============= [ FUNCTION ] ======================================================
+
+
+// Fungsi untuk mengecek dan mengirim notifikasi sholat
+async function checkAndSendSholatNotification() {
+    if (!sholatNotif.db.settings.globalActive) return;
+    
+    const jadwal = await sholatNotif.getJadwalSholat();
+    if (!jadwal) return;
+    
+    const now = new Date();
+    const currentTime = now.getHours().toString().padStart(2, '0') + ':' + 
+                       now.getMinutes().toString().padStart(2, '0');
+    
+    const waktuSholat = {
+        'subuh': jadwal.subuh,
+        'dzuhur': jadwal.dzuhur,
+        'ashar': jadwal.ashar,
+        'maghrib': jadwal.maghrib,
+        'isya': jadwal.isya
+    };
+    
+    for (const [waktu, jam] of Object.entries(waktuSholat)) {
+        if (currentTime === jam) {
+            const groups = sholatNotif.getActiveGroups();
+            const message = sholatNotif.formatNotificationMessage(waktu.toUpperCase(), jam);
+            
+            for (const group of groups) {
+                try {
+                    await Dicky.sendMessage(group.id, { text: message });
+                } catch (error) {
+                    console.error(`Failed to send notification to group ${group.id}:`, error);
+                }
+            }
+        }
+    }
+}
+
+// Jalankan pengecekan setiap menit
+cron.schedule('* * * * *', checkAndSendSholatNotification);
 
 const example = (teks) => {
 return `\n *Contoh Penggunaan :*\n Ketik *${prefix+command}* ${teks}\n`
@@ -378,6 +419,81 @@ if (!pluginsDisable) return
 switch (command) {
 
 
+    //sholat notification
+
+    case 'addsholatgroup': {
+        if (!m.isGroup) return reply('Perintah ini hanya bisa digunakan di dalam grup!');
+        if (!m.isAdmin && !isCreator) return reply('Perintah ini hanya bisa digunakan oleh owner grup!');
+        
+        if (sholatNotif.addGroup(m.chat)) {
+            reply('✅ Grup berhasil ditambahkan ke database notifikasi sholat');
+        } else {
+            reply('❌ Grup sudah terdaftar sebelumnya');
+        }
+        break;
+    }
+    
+    case 'delsholatgroup': {
+        if (!m.isGroup) return reply('Perintah ini hanya bisa digunakan di dalam grup!');
+        if (!m.isAdmin && !isCreator) return reply('Perintah ini hanya bisa digunakan oleh owner grup!');
+        
+        if (sholatNotif.removeGroup(m.chat)) {
+            reply('✅ Grup berhasil dihapus dari database notifikasi sholat');
+        } else {
+            reply('❌ Grup tidak terdaftar dalam database');
+        }
+        break;
+    }
+    
+    case 'togglesholat': {
+        if (!isCreator) return reply('Perintah ini hanya bisa digunakan oleh owner bot!');
+        
+        const status = sholatNotif.toggleGlobalActive();
+        reply(`✅ Notifikasi sholat telah ${status ? 'diaktifkan' : 'dinonaktifkan'} secara global`);
+        break;
+    }
+    
+    case 'checksholat': {
+        if (!m.isGroup) return reply('Perintah ini hanya bisa digunakan di dalam grup!');
+        
+        const registered = sholatNotif.isGroupRegistered(m.chat);
+        if (!registered) {
+            reply('❌ Grup ini tidak terdaftar untuk notifikasi sholat');
+            return;
+        }
+        
+        const group = sholatNotif.db.groups.find(g => g.id === m.chat);
+        let status = `*STATUS NOTIFIKASI SHOLAT*\n\n`;
+        status += `Status: ${group.active ? '✅ Aktif' : '❌ Nonaktif'}\n`;
+        status += `Global: ${sholatNotif.db.settings.globalActive ? '✅ Aktif' : '❌ Nonaktif'}`;
+        
+        reply(status);
+        break;
+    }
+    
+    case 'jadwalsholat': {
+        const jadwal = await sholatNotif.getJadwalSholat();
+        if (!jadwal) {
+            reply('❌ Gagal mengambil jadwal sholat');
+            return;
+        }
+        
+        let msg = `*JADWAL SHOLAT HARI INI*\n`;
+        msg += `📍 Lokasi: ${jadwal.wilayah}\n`;
+        msg += `📅 Tanggal: ${jadwal.tanggal}\n\n`;
+        msg += `Imsak: ${jadwal.imsak}\n`;
+        msg += `Subuh: ${jadwal.subuh}\n`;
+        msg += `Terbit: ${jadwal.terbit}\n`;
+        msg += `Dzuhur: ${jadwal.dzuhur}\n`;
+        msg += `Ashar: ${jadwal.ashar}\n`;
+        msg += `Maghrib: ${jadwal.maghrib}\n`;
+        msg += `Isya: ${jadwal.isya}`;
+        
+        reply(msg);
+        break;
+    }
+
+    //penutup fitur sholat notification
 
     case 'brat': {
         if (!text) return reply(`Penggunaan : ${prefix + command} <teks>`);
