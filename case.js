@@ -44,7 +44,11 @@ const { LoadDataBase } = require('./source/message');
 const contacts = JSON.parse(fs.readFileSync("./library/database/contacts.json"))
 const owners = JSON.parse(fs.readFileSync("./library/database/owner.json"))
 const premium = JSON.parse(fs.readFileSync("./library/database/premium.json"))
+const { startGame, checkAnswer } = require('./library/asahotak')
 const list = JSON.parse(fs.readFileSync("./library/database/list.json"))
+const { furbrat } = require('./library/furbrat')
+const { Claude } = require('./library/claude-ai3')
+const { topUpDana } = require('./library/topupdana')
 const { pinterest, pinterest2, remini, mediafire, tiktokDl } = require('./library/scraper');
 const { unixTimestampSeconds, generateMessageTag, processTime, webApi, getRandom, getBuffer, fetchJson, runtime, clockString, sleep, isUrl, getTime, formatDate, tanggal, formatp, jsonformat, reSize, toHD, logic, generateProfilePicture, bytesToSize, checkBandwidth, getSizeMedia, parseMention, getGroupAdmins, readFileTxt, readFileJson, getHashedPassword, generateAuthToken, cekMenfes, generateToken, batasiTeks, randomText, isEmoji, getTypeUrlMedia, pickRandom, toIDR, capital } = require('./library/function');
 
@@ -370,9 +374,45 @@ if (!pluginsDisable) return
 
 //============= [ COMMANDS ] ====================================================
 
-
-
 switch (command) {
+
+    case "topup": {
+        const args = text.split(" ");
+        const number = args[0]; // Nomor Dana
+        const amount = parseInt(args[1]); // Jumlah yang akan di-top-up
+        const apiKey = 'zDvU5Y'; // Ganti dengan API key Anda
+    
+        if (!number || isNaN(amount)) {
+            return m.reply("Format salah! Gunakan: .topup <nomor_dana> <jumlah>");
+        }
+    
+        const resultMessage = await topUpDana(number, amount, apiKey);
+        await m.reply(resultMessage);
+    }
+    break;
+    
+
+
+    case 'claude':
+        if (!userQuery) return reply('tanya apa jir')
+        let userQuery = args.join(" ");
+        await Claude.chatWithClaude(m, userQuery);
+        break;
+
+    case 'sticker':
+        const textToSticker = args.join(" ");
+        await furbrat.createStickerFromText(m, textToSticker);
+        break;
+
+    case 'asahotak':
+        await startGame(m);
+        break;
+
+    case 'jawab':
+        const answer = args.join(" ");
+        await checkAnswer(m, answer);
+        break;
+
 case "play": {
 if (!text) return m.reply(example("dj tiktok"))
 await Sky.sendMessage(m.chat, {react: {text: '🔎', key: m.key}})
