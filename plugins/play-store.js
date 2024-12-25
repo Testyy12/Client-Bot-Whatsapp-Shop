@@ -1,7 +1,24 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
+const axios = require("axios");
+const cheerio = require("cheerio");
 
-// PlayStoreScraper class definition
+let handler = async (m, { Sky, text }) => {
+  if (!text) throw "Mau Cari Apk Apa?";
+  m.reply("Tunggu sebentar...");
+  let hasil = await PlayStoreScraper.search(text);
+  if (hasil.error) throw hasil.error;
+
+  let anu = hasil.map((v) => 
+    `*Nama:* ${v.nama}\n*Developer:* ${v.developer}\n*Rate:* ${v.rate}\n*Rate 2:* ${v.rate2}\n*Link:* ${v.link}\nLinkDev: ${v.link_dev}`
+  ).join("\n\n°°°°°°°°°°°°°°°°°°°°°°°°°°°°°\n\n");
+
+  m.reply(anu);
+};
+
+
+handler.command = ["playstore"];
+
+export default handler;
+
 class PlayStoreScraper {
   static async search(query) {
     try {
@@ -40,27 +57,3 @@ class PlayStoreScraper {
     }
   }
 }
-
-// Command handler function
-async function handler(command, args) {
-  if (command === 'search') {
-    const query = args.join(' ');
-    const results = await PlayStoreScraper.search(query);
-    
-    // Format the results for output
-    if (results.error) {
-      return results.error;
-    }
-
-    return results.map(app => {
-      return `Name: ${app.nama}\nDeveloper: ${app.developer}\nRating: ${app.rate}\nLink: ${app.link}\nImage: ${app.img}\n\n`;
-    }).join('');
-  } else {
-    return 'Unknown command. Please use "search <query>" to search for apps.';
-  }
-}
-
-// Export the command handler
-module.exports = {
-  handler,
-};
