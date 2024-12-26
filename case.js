@@ -418,6 +418,53 @@ if (!pluginsDisable) return
 
 switch (command) {
 
+  
+// command marketplace 
+
+case 'markethelp':
+    m.reply(`
+.list [menampilkan produk]
+.buy <idproduk> <jumlah>
+.updateStock <tambah/kurang> <idproduk> <jumlahstok>
+.add name, price, stock, description
+.remove idproduk
+`)
+    break;
+
+case 'list':
+    await marketplace.listProduk(m);
+    break;
+case 'buy':
+    const [idProduk, jumlah] = args;
+    await marketplace.beliProduk(m, idProduk, parseInt(jumlah));
+    break;
+case 'updateStock':
+    if(!isCreator) return m.reply(mess.owner)
+    const [action, idProdukStok, jumlahStok] = args;
+    await marketplace.updateStok(m, action, idProdukStok, parseInt(jumlahStok));
+    break;
+case 'add':
+    if(!isCreator) return m.reply(mess.owner)
+    const [name, price, stock, description] = args;
+    await marketplace.tambahProduk(m, name, parseFloat(price), parseInt(stock), description);
+    break;
+case 'remove':
+    if(!isCreator) return m.reply(mess.owner)
+    const [idProdukHapus] = args;
+    await marketplace.hapusProduk(m, idProdukHapus);
+    break;
+case 'setDiscount':
+    if(!isCreator) return m.reply(mess.owner)
+    const [idProdukDiskon, discount, startDate, endDate] = args;
+    await marketplace.setDiskon(m, idProdukDiskon, parseFloat(discount), startDate, endDate);
+    break;
+case 'setPrice':
+    if(!isCreator) return m.reply(mess.owner)
+    const [idProdukHarga, newPrice] = args;
+    await marketplace.setHarga(m, idProdukHarga, parseFloat(newPrice));
+    break;
+
+// end of cmd marketplace
 
     //sholat notification
 

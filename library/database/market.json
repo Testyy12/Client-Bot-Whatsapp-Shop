@@ -1,0 +1,26 @@
+{
+    "products": [
+      {
+        "id": "Prod001",
+        "name": "Produk 1",
+        "stock": 10,
+        "price": 50000,
+        "description": "Deskripsi produk 1"
+      },
+      {
+        "id": "Prod002",
+        "name": "Produk 2",
+        "stock": 20,
+        "price": 100000,
+        "description": "Deskripsi produk 2"
+      }
+    ],
+    "discounts": [
+      {
+        "id": "Prod001",
+        "discount": 10,
+        "startDate": "2024-03-01",
+        "endDate": "2024-03-31"
+      }
+    ]
+  }
