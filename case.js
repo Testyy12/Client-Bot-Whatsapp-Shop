@@ -49,6 +49,7 @@ const list = JSON.parse(fs.readFileSync("./library/database/list.json"))
 const { furbrat } = require('./library/furbrat')
 const { Claude } = require('./library/claude-ai3')
 const { topUpDana } = require('./library/topupdana')
+const RekberManager = require('./library/rekber')
 const { SholatNotification } = require('./library/sholatNotif');
 const sholatNotif = new SholatNotification();
 const { imgToSticker } = require('./library/imgTosticker')
@@ -418,7 +419,73 @@ if (!pluginsDisable) return
 
 switch (command) {
 
-  
+//   rekber case
+
+case "createrekber": {
+    if (!text.includes("|")) return m.reply("Format: .createrekber <judul>|<nomor_user2>")
+    const [title, buyer] = text.split("|")
+    const rekberManager = new RekberManager(Sky)
+    const rekberId = await rekberManager.createRekber(m, m.sender, buyer, title)
+    if (rekberId) {
+        m.reply(`Rekber berhasil dibuat dengan ID: ${rekberId}`)
+    } else {
+        m.reply('Gagal membuat rekber.')
+    }
+}
+break
+
+case "rekber": {
+    if (!text.includes("|")) return m.reply("Format: .rekber <rekberId>|<barang>,<harga>,<penjual&nomor>,<pembeli&nomor>")
+    const [rekberId, details] = text.split("|")
+    const rekberManager = new RekberManager(Sky)
+    const success = await rekberManager.setupRekberTransaction(m, rekberId, details)
+    if (success) {
+        m.reply('Transaksi berhasil disiapkan. Silakan lakukan pembayaran.')
+    } else {
+        m.reply('Gagal menyiapkan transaksi.')
+    }
+}
+break
+
+case "cekstatus": {
+    const rekberId = text.trim()
+    const rekberManager = new RekberManager(Sky)
+    const success = await rekberManager.checkPaymentStatus(rekberId)
+    if (success) {
+        m.reply('Pembayaran telah diterima.')
+    } else {
+        m.reply('Pembayaran belum diterima.')
+    }
+}
+break
+
+case "selesaikan": {
+    const rekberId = text.trim()
+    const rekberManager = new RekberManager(Sky)
+    const success = await rekberManager.selesaikanTransaksi(rekberId)
+    if (success) {
+        m.reply('Transaksi telah diselesaikan.')
+    } else {
+        m.reply('Gagal menyelesaikan transaksi.')
+    }
+}
+break
+
+case "cairkandana": {
+    if (!text.includes(",")) return m.reply("Format: .cairkandana <rekberId>,<namaEwallet>,<nomorEwallet>,<perusahaanEwallet>")
+    const [rekberId, ewallet] = text.split(",")
+    const rekberManager = new RekberManager(Sky)
+    const success = await rekberManager.cairkanDana(m, rekberId, ewallet)
+    if (success) {
+        m.reply('Permintaan pencairan dana telah dikirim ke admin.')
+    } else {
+        m.reply('Gagal mengirim permintaan pencairan dana.')
+    }
+}
+break
+
+// tutup rekber case
+
 // command marketplace 
 
 case 'markethelp':

@@ -1,0 +1,5 @@
+{
+    "maxRekberPerWeek": 100,
+    "maxTransactionAmount": 10000000,
+    "adminFee": 2000
+}
